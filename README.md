@@ -301,6 +301,8 @@ m.drawmeridians(meridians, labels=[0, 0, 0, 1], linewidth=0.5)
 ```
 ![image](https://github.com/user-attachments/assets/5ab8f35a-be25-4580-84d6-115afdb5a5a9)
 
+_The figure above is depicting the outline of maps soon to be made with potential vorticity and geopotential height. Additionally, it is restricted to the area of interest for the project._
+
 **Setting Up the Custom Color Bar**
 ```
 colors = [
@@ -370,6 +372,8 @@ plt.tight_layout()
 plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/3622fae9-d8b6-4c9c-9b4e-e0fef66fe5d7)
+
+_The figure above is showing a certain time utilizing the color bar created for PV and is showing the combination of both PV and geopotential height._
 
 **How to Save Data: Looping through Hour Data**
 ```
@@ -486,6 +490,15 @@ plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/ea10531c-aacc-4610-8382-b5e8e187d202)
 
+_The figure above is showing 8 clusters made with K-Means clustering. The amount of clusters was determined by utilizing the Elbow method, which is shown in the next image._
+
+_Clusters 0 and 6: Appear to show deep PV intrusions into the analysis area with strong geopotential troughs, which are likely indicating cut-off lows or strong mid lat disturbances._
+
+_Clusters 1 and 4 : There is more zonal flow and lesser PV anomalies. This represents a calmer, less blocked synoptic conditions._
+
+_Clusters 2 and 5: Cluster 5 is showing highly curved geopotential lines and strong PV gradients, which possibly could be blocking patterns or closed lows. Cluster 2 has a more north-south oriented features, which could indicate ridge-to-trough transitions._
+
+_Clusters 3 and 7: There appears to have more subtle differences in PV positioning and ridge orientation._
 ```
 cluster_range = range(2,15)
 inertias = []
@@ -506,6 +519,8 @@ plt.grid(True)
 plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/20f87c39-d335-4c26-9818-d949613fad34)
+
+_The figure above is showing inertia (also known as within-cluuster sum of squares) on the y-axis and number of clusters on the x-axis. Inertia, in this case, is a measure of how compact the clusters are. The lower the inertia, the closer the points are to their assign cluster centers; so, the lower the better._
 ```
 from sklearn.metrics import davies_bouldin_score
 
@@ -529,6 +544,13 @@ plt.grid(True)
 plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/84a47209-08ef-4f42-92fb-902bbf0400c8)
+
+_The figure above is showing the Davies-Bouldin Index (DBI) for K-Means clustering over aa raange of cluster counts from k=2 to k=14._
+
+_The y-axis is showing the DBI, which measres the average similarity between clusters. The lower the value, the better, indicating more distinct clusters. The x-axis is the number of clusters._
+
+_Based on the results, the optimal clustering should be k=8. Higher DBI values at k=4, 9, and 13 indicate poorer separation / overlapping clusters._
+
 ```
 from sklearn.metrics import silhouette_score
 score = silhouette_score(image_data, kmeans.labels_)
@@ -537,6 +559,7 @@ print(f"Silhouette Score: {score:.3f}")
 ```
 <img width="211" alt="Screenshot 2025-05-03 at 15 29 54" src="https://github.com/user-attachments/assets/7d41bfe7-edc1-43a5-b6fd-03ad6aed3751" />
 
+_This score is showing that the clustering is barely better than random. There is significant overlap between clusters and feature space. This could be due to weather map images being very similary visually, or the sample size is too big._
 **Additional Cluster Testing!**
 ```
 from sklearn.metrics import calinski_harabasz_score
@@ -563,6 +586,13 @@ print(f"k={k}: CH Score = {score:.2f}")
 ```
 <img width="214" alt="Screenshot 2025-05-03 at 15 27 45" src="https://github.com/user-attachments/assets/f6a4f80a-ea9f-4c59-be09-adaf9eba963d" />
 
+_The figure above is showing the Calinski-Harabasz (CH) Score for K-Means clustering. The score evaluates clustering performance with the ratio of..._
+
+_1. How far apart cluster centers are_
+
+_2. How tight the clusters are_
+
+_The higher the CH score the better, so, in this casse, even though the score is low, it is the highest score seen when k=10. With other values, k=2 and k=10, the score decreases substantially._
 ```
 from sklearn.manifold import TSNE
 ```
@@ -584,6 +614,8 @@ plt.grid(True)
 plt.show()
 ```
 ![image](https://github.com/user-attachments/assets/0288f5b2-137d-4f14-b32a-1c626c97dc4f)
+
+_The figure above is at-SNE plot, showing the results of applying K-Means clustering with k=10. This was the best score when utilizing the CH score. Each dot is representing an image that is flattened and scaled. The x and y axes are the first two dimensions, which reduce the high-dimensional image data compressed to 2D for accurate visualization. Each color represents a cluster. Many clusters form dense regions, suggesting that K-Means found some structure in the data. However, there is still significant overlap._
 
 **Let's Try Using ResNet50 along with CNN!**
 ```
@@ -650,3 +682,23 @@ print(f"Silhouette Score (CNN features): {score:.3f}")
 #Score with CNN is 0.094
 ```
 <img width="339" alt="Screenshot 2025-05-03 at 15 28 42" src="https://github.com/user-attachments/assets/47608b28-2d30-4a74-9bb9-3f8cbe1a5d2d" />
+
+_The figure above shows the silhouette score after applying K-Means clustering using CNN-extracted features (from ResNet). This score is still low, but significantly better. This means that the cllusters are now slightly more internaally cohesive and better separated. Additionally, CNN features are starting to capture meteorological structure. However, increasing cluster size any further than 20 showed a signifcant decrease in score._
+
+**Results!**
+
+To identify blocking event patterns in ERA5, we applied K-Means clustering to our generated plots representing 500 hPa geopotential height and potential vorticity (PV) over the central United States. The clustering performance was evaluated using a combination of validation metrics and visual inspection of t-SNE projections from each clusters. 
+
+Initial clustering, based on raw data, revealed only weak structure. The Silhouette Score for these data was 0.024, indicating minimal cohesion and seperation among clusters. Visual inspection of the t-SNE projections for k=2 and k=4 showed moderate grouping, though with considerable overlap, suggesting subtle variability in synoptic features.
+
+To improve clster seperation, we extracted high-level image features using a pre-trained CNN (ResNet50). This led to a modest improvement in clustering quality, with the Silhouette Score increasing to 0.094.
+
+Internal validation provided mixed but informative guidance:
+
+1. The Elbow Method: It showed diminishing returns beyond k=6, suggesting an inflection point in cluster compactness.
+
+2. The Calinski-Harabasz Index: It peaked near k=10 (CH = 23.65), indicating well-separated, compact clusters at that scale.
+
+3. The Davies-Bouldin Index: It reached a local minimum around k=8, further supporting this as a viable clustering solution.
+
+Visual inspection of representative images from k=8 and k=10 clsters revealed physically meaningful groupings. Some clusters captured strong mid lat distrubances and PV streams, whiles others highlighted quiter / more zonal flow regimes. This supports the utility of CNN-based K-Means clustering for organized large image datasets into interpretable regimes.
